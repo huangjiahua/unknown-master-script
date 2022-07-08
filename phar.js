@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Meituan Qiang Ban
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.1
 // @description  try to take over the world!
 // @author       flythatship
 // @match        https://pharmacist.meituan.com/*
@@ -12,16 +12,19 @@
 (function () {
   "use strict";
 
-  function clickSubmitButtonIfExists(maxAttempt) {
+  function clickSubmitButtonIfExists(maxAttempt, afterFunc) {
     let btn = document.querySelector("button.boo-btn-warning");
     if (btn === null || btn === undefined) {
       if (!Number.isInteger(maxAttempt) || maxAttempt <= 0) {
         console.log("no submit button");
+        if (afterFunc !== null && afterFunc !== undefined) {
+          afterFunc();
+        }
         return;
       }
       setTimeout(() => {
-        clickSubmitButtonIfExists(maxAttempt - 1);
-      }, 100);
+        clickSubmitButtonIfExists(maxAttempt - 1, afterFunc);
+      }, 50);
       return;
     }
     if (btn.textContent.includes("确认选班")) {
@@ -30,6 +33,14 @@
     } else {
       console.log("button not submit");
     }
+    if (afterFunc !== null && afterFunc !== undefined) {
+      afterFunc();
+    }
+  }
+
+  function showEndSign() {
+    document.querySelector(".scheduling-wrap").style.backgroundColor =
+      "#d6e3c5";
   }
 
   function raceSchedule() {
@@ -47,7 +58,7 @@
         }
       },
       () => {
-        clickSubmitButtonIfExists(15);
+        clickSubmitButtonIfExists(32, showEndSign);
       }
     );
   }
