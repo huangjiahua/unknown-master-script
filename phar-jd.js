@@ -116,9 +116,40 @@
     setInterval(addPreSelectCheckboxes, 100);
   }
 
+  const asyncClickButton = async (button, date, time) => {
+    button.click();
+    console.log(`tried to click ${date} ${time}`);
+  };
+
+  function requestDuty(btn) {
+    const whId = btn.getAttribute("onclick").split("'")[1];
+    const buttonId = btn.getAttribute("onclick").split("'")[1];
+    const isBlack = 0;
+    $.ajax({
+      url: "/userworkhours/add/" + whId + "?isBlack=" + isBlack,
+      type: "GET",
+      async: true,
+      dataType: "json",
+      success: function (response) {
+        if (response.status == 303) {
+          return;
+        }
+        initCellBtn(buttonId, response.result);
+        if (response.status != 200) {
+          WebCommonUtil.errorAlert(response.message);
+        }
+      },
+      error: function (XMLHttpRequest, textStatus, errorThrown) {
+        WebCommonUtil.errorAlert(errorText + ",网络或者系统异常！");
+      },
+    });
+    choosehours();
+  }
+
   function requestDutyOnCurrentWeek() {
     let preselected = 0;
     let tried = 0;
+    let btnsToClick = [];
 
     forEachCell(
       (cell, date, time) => {
@@ -127,13 +158,21 @@
         }
         preselected++;
         let button = cell.querySelector("button");
-        if (button.textContent.includes("抢班")) {
-          button.click();
-          tried++;
-          console.log(`tried to click ${date} ${time}`);
-        }
+        btnsToClick.push([button, date, time]);
       },
       () => {
+        btnsToClick.reverse().forEach((t) => {
+          let [btn, date, time] = t;
+          if (
+            !btn.classList.contains("disabled") &&
+            btn.textContent.includes("抢班")
+          ) {
+            console.log(`tried to click ${date} ${time}`);
+            requestDuty(btn);
+            // asyncClickButton(btn, date, time);
+            tried++;
+          }
+        });
         console.log(`pre-selected: ${preselected}, tried: ${tried}`);
       }
     );
