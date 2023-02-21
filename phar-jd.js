@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         JD Qiang Ban
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.1
 // @description  try to take over the world!
 // @author       flythatship
 // @match        https://cwm.jd.com/userworkhours/chooseindex
@@ -25,12 +25,25 @@
       return element.textContent;
     });
 
+    let actionMat = [];
+
     let rows = document.querySelectorAll("tr.align-center");
     for (let row of rows) {
+      let actionRow = [];
       let time = row.children[0].textContent.trim();
-      [...row.children].slice(1).map((cell, idx) => {
-        func(cell, dates[idx], time);
+      [...row.children].slice(1).forEach((cell, idx) => {
+        actionRow.push(() => {
+          func(cell, dates[idx], time);
+        });
       });
+
+      actionMat.push(actionRow);
+    }
+
+    for (let j = 0; j < actionMat[0].length; j++) {
+      for (let i = 0; i < actionMat.length; i++) {
+        actionMat[i][j]();
+      }
     }
 
     if (afterFunc !== null && afterFunc !== undefined) {
